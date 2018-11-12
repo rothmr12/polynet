@@ -1,0 +1,113 @@
+# This is an input deck for the program PolyNet.
+#
+# This file is in a format made to be read by the GetParameter functions,
+# which are defined in ReadInputDeck.h and ReadInputDeck.cpp.
+# There is also a special "GetColor" function for specifying colors in 
+# graphics. Colors can be specified by one of the color strings defined in
+# ReadInputDeck.cpp, or as a trio of RGB values in [0, 255].
+#
+# Syntax for specifying parameters on a single line is as follows:
+#
+# [ParameterName] [Any amount of whitespace] [Value(s)]
+#
+# A "#" symbol denotes comments. Anything on a line after a "#" will
+# be ignored. GetParameter functions can handle int-valued, double-valued, and
+# string-valued parameters. Double-valued parameters should be specified
+# in the input deck in the usual c-style format: 12, -12, 12., 12.3, 3.14e0,
+# -3.14e4, +3.14e-3, etc, are all examples of valid specifications for
+# double-valued parameters.
+#
+# If a given parameter is not found specified in the input deck, it will
+# instead be given its default value. Default values for all parameters are
+# given in PolyNet.h
+#
+# Parameter names are not case sensitive.
+
+
+Seed 0										# Random number seed. <= 0 means epoch time will be used
+LoadNetworkFlag 0							# Whether to load a network from a given file. 0 = false, not 0 = true
+NetworkFileName movie2.txt					# Name of file to load network from if LoadNetworkFlag = true
+
+
+# System geometry
+
+InitialWidth 100e-9 100e-9 100e-9 				# Initial domain dimensions (meters)
+PeriodicFlag 1								# Whether the system will have periodic boundary conditions. 0 = false, not 0 = true
+
+
+# Basic network properties
+
+MonomerNumberDensity 8.13347e27				# Monomer number density (m^-3) (8.13347e27 m^-3 at 0.92 g/cm^3 for polyisoprene)
+NodeNumberDensity 4e25 						# Crosslink/Node number density (m^-3)
+MassNode 0.0								# Mass of a crosslink/node (kg)
+MassMonomer 1.13113e-25						# Mass of a single average monomer (kg) (1.13113e-25 for polyisoprene C5H8)
+MonomerLength 4.332e-10						# Average length of a monomer (m) (4.332e-10 for polyisoprene)
+KuhnLength 9.58e-10							# Kuhn length of this material (m) (9.58e-10 for polyisoprene)
+ChainsPerNode 4								# Coordination number of this material
+RadiusProbabilityCutoff 0.001				# Determines the maximum chain end-to-end distance by specifying a fraction of the distribution tail probability to cut off
+
+
+# Force law and dynamics
+
+Temperature 300.							# Initial temperature of the system (K)
+Keps 2.00e-13								# Coefficient for the Ia part of the chain tension curve (N/strain*K) (0.06e-9/300 = 2.0e-13 for polyisoprene)
+Kt 5.0e-14									# Coefficient for the Ib part of the chain tension curve (N/strain*K) (0.015e-9/300 = 5.0e-14 for polyisoprene)
+DragForce 0.01e-9							# Net force on a node required to drag it (N) (0.01e-9 for polyisoprene)
+BreakForce 6.8e-9							# Tension required to break a chain (N) (6.8e-9 for polyisoprene)
+Gamma 4e0									# Viscous drag coefficient (N/(m/s) = kg/s) (4.0 seems to work best for polyisoprene)
+
+
+# Deformation parameters, i.e. how we'll load this thing
+
+# Simple strain
+DeformationType 0							# 0 = Simple Strain, 1 = Stress relaxation, 2 = Oscillation (Add others later?) (Major strain axis is always z)
+StrainRate 1e-4								# Maximum strain rate during deformation (s^-1)
+LambdaMax 50.0								# Maximum Lambda to which sample shall be stretched or compressed. Lambda = 1 + Strain
+
+# Oscillation (displays hysteresis)
+#DeformationType 2							# 0 = Simple Strain, 1 = Stress relaxation, 2 = Oscillation (Add others later?) (Major strain axis is always z)
+#StrainRate 1e-1								# Maximum strain rate during deformation (s^-1)
+#LambdaMax 10.0								# Maximum Lambda to which sample shall be stretched or compressed. Lambda = 1 + Strain
+#TimeMax 1.5e4								# Maximum time to simulation to (s) (Only matters for Stress relaxation and oscillation)
+
+DtCoefficient 0.01							# Time step will be Dt ~ DtCoefficient*(Physical Time scale)
+
+FreezeEndsFlag 0							# Whether some volume fraction at each +-z end will have nodes frozen wrt each other and boundaries. 0 = false, not 0 = true
+FreezeFraction 0.05							# Fraction of volume (at each +-z end) to freeze nodes in
+
+
+# Output parameters
+
+OutputFolder ./Test/						# What folder to put any output files into
+
+StrainStressFileFlag 1						# Whether or not to create a file to put time / strain / stress tensor / etc data in. 0 = false, not 0 = true
+StrainStressFile StrainStress.txt			# Name of file to put time / strain / stress tensor / etc data in
+
+DrawNetworkImagesFlag 1						# Whether to draw images of the network as the simulation progresses. 0 = false, not 0 = true
+NetworkImageInterval 4000					# How many timesteps between network images. <= 0 means only the initial condition will be drawn
+NumberOfPixels 2000							# How many pixels along the largest dimension of the image
+NetworkImageName RubberNetwork				# Name to give to output images. Image file name format will be [NetworkImageName].[Timestep].[ImageFormat]
+ImageFormat png								# What image format to output (For example: png) 
+
+
+# Image rendering details
+
+ViewPoint 1 0 0								# Image Viewpoint in units of the length of the domain's diagonal (origin is at the center of the domain)
+ViewDirection -1 0 0						# View direction (a unit vector) used in making images of the network.
+Up 0 1 0									# A unit vector that will define an "up" direction to orient images
+LightDirection 0 -1 0						# A unit vector defining the direction the light source will shine on the network in images
+
+AngularSpan 0.8 0.8							# Angular size (radians) of the imaged region in the horizontal and vertical (wrt Up) directions
+
+RescaleViewPointFlag 0						# Whether or not to rescale the Viewpoint position each time step, to keep the whole system in "frame". 0 = false, not 0 = true
+
+NodeRadius 0.80								# Radius of the sphere representing a crosslink node, as a fraction of the monomer length. (<= 0 means none will be drawn)
+ChainRadius 0.20							# Radius of the cylinder representing a chain, as a fraction of the monomer length. (<= 0 means none will be drawn)
+BorderRadius 0.0							# Radius of the cylinders denoting the borders of the domain, as a fraction of the monomer length. (<= 0 means none will be drawn)
+
+BackgroundColor White						# Color of image background. Color name or RGB values (0 to 255).
+Node0Color      Black						# Color of nodes with tag 0. Color name or RGB values (0 to 255).
+Node1Color      Black						# Color of nodes with tag 1. Color name or RGB values (0 to 255).
+LooseChainColor Blue						# Color of loosest chains. Color name or RGB values (0 to 255).
+TightChainColor Red							# Color of tightest chains. Color name or RGB values (0 to 255).
+BorderColor     Lime 						# Color of border frame. Color name or RGB values (0 to 255).
