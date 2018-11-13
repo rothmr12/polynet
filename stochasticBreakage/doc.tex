@@ -1,0 +1,104 @@
+\documentclass[letterpaper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{physics}
+\usepackage{siunitx}
+
+\begin{document}
+\section{Theory: Stochastic bond breakage}
+We calculate the time-dependent breakage probability of a chain, $P_\mathrm{chain}(t)$, as a function of the breakage probabilities of its constituent bonds, $\{P_i(t)\}$. An expression for $P_\mathrm{chain}(t)$ is obtained by observing that the \emph{survival} probability of the chain is the product of the survival probabilities of the individual chemical bonds. Mathematically,
+%
+\begin{align}
+1-P_\mathrm{chain}(t) &= \prod_i [1-P_i(t)] \nonumber\\
+P_\mathrm{chain}(t)   &= 1-\prod_i [1-P_i(t)] \label{eq:pchain}
+\end{align}
+%
+where the product is over all the load-bearing chemical bonds in the chain. The bond breakage probabilities $\{P_i(t)\}$ depend on the load on a chemical bond, which changes (and is tracked) during the course of a simulation as the network evolves. Consequently, $\{P_i(t)\}$ are not available in analytical form, but are numerically computed as discussed next.
+
+A polymer chain is viewed as a sequence of chemical bonds. Breakage rate of the $i^\mathrm{th}$ bond is given by the Arrhenius-like expression from harmonic Transition State Theory (hTST):
+
+\noindent
+\begin{equation}
+k_i = k_{0,i}\exp\left[{-\frac{E_{a,i}}{k_BT}}\right] \label{eq:htst}
+\end{equation}
+
+\noindent
+where $k_B=$ Boltzmann's constant, $T=$ temperature, $E_{a,i}=$ activation energy for breakage, and $k_{0,i}=$ prefactor. Load on a bond modifies the potential energy landscape, and changes both the energy barrier $E_{a,i}$, and the prefactor $k_{0,i}$, leading to a change in the bond-breakage rate. Since the activation energy appears in the exponential, the change in the prefactor is assumed to be negligible. $E_{a}^*$ is calculated over a range of forces and saved in a lookup table.
+
+
+The hTST rates for bond-breakage computed above were used to numerically compute the bond-breakage \emph{probabilities} $\{P_i(t)\}$ as follows. Assuming bond breakage times are distributed exponentially, the instantaneous PDF of bond breakage times is given by
+%
+\begin{equation}
+f_i(t) = k_{i}\exp\left[{-k_it}\right]\\
+\end{equation}
+%
+and the bond-breakage probability after a time $t$ is given by the cumulative distribution function as
+\begin{align}
+P_i(t) &= \int_0^tf_i(s)\mathrm{d}s \nonumber\\
+       &= \int_0^tk_{i}\exp\left[{-k_is}\right]\mathrm{d}s \label{eq:pbond}
+\end{align}
+%
+The integration is done numerically in the simulation, because bond breakage rates $k_i$ depend on the load experienced by a bond, which is in turn a complex function of network geometry and difficult to obtain in analytical form. $P_i(t)$ is the probability of breakage of the $i^\mathrm{th}$ chemical bond in the system, and also accounts for its loading history. Individual $\{P_i(t)\}$ will be used to compute chain breakage probability, $P_\mathrm{chain}$.
+
+Combining equations \ref{eq:pchain} and \ref{eq:pbond}, we get:
+
+\begin{equation}\label{eq:main}
+  P_\mathrm{chain}(t) = 1 - \prod_i{ \left\lbrace{ 1- \int_0^t{k_i\exp[-k_i s]\dd{s}}
+  }\right\rbrace}
+\end{equation}
+
+where the product is over all bonds in the chain, and the different $k_i$ are given by equation \ref{eq:htst}.
+
+\section{Implementation in stoB object}
+
+\section{Test cases}
+The stoB object is tested for the following cases that have analytical solutions. All test cases are driven using the \texttt{testStoB.cpp} program.  All test cases are run until the probability $P_\mathrm{chain}$ exceeds 0.99.
+
+\subsection{Single bond with no load}
+This test is run using the \texttt{run\_single\_bond} function. The following parameters are used:
+
+\begin{align*}
+  k_0 &= \SI{1e12}{s^{-1}}\\
+  E_a &= \SI{1.2 }{eV}\\
+  T   &= \SI{300}{K}\\
+  \Delta t &= \SI{10}{s}\\
+\end{align*}
+
+The numerical results are saved in the file \texttt{single-bond-F-0nN}, and the analytical solution is obtained from equation \ref{eq:main} as
+\begin{equation}
+  P_\mathrm{chain} = 1-\exp[-k_0\exp(-\frac{E_a}{k_B T})t]
+\end{equation}
+
+
+
+\subsection{Single bond with constant load}
+The parameters used are the same as before. The dependence of $E_a$ on the applied load is given as
+\[
+E_a^* = E_a + E_a^\mathrm{(slope)}F
+\]
+with
+\begin{align*}
+  E_a^\mathrm{(slope)} &= \num{-0.1e9}\\
+  F &= \SI{1}{nN}
+\end{align*}
+
+The applied load leads to a reduction in energy barrier of \SI{0.1}{eV}, and the numerical results are saved in the file \texttt{single-bond-F-0nN}. The analytical solution is obtained from equation \ref{eq:main} as
+\[
+P_\mathrm{chain} = 1-\exp[-k_0\exp(-\frac{E_a^*}{k_B T})t]
+\]
+
+\subsection{Single bond with varying load}
+The applied load on the bond is varied as
+\[
+F(t) = F_0 \cos(\omega t)
+\]
+The parameters used are the same as before, which leads to an analytical solution of
+
+(Is analytical solution even possible here?)
+
+
+\subsection{Two bonds with no load}
+\subsection{Two bonds with constant load}
+\subsection{Two bonds with varying load}
+
+
+\end{document}
